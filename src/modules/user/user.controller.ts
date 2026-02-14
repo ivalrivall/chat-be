@@ -18,11 +18,11 @@ import {
   UUIDParam,
 } from '../../decorators/http.decorators.ts';
 import { UseLanguageInterceptor } from '../../interceptors/language-interceptor.service.ts';
-import type { TranslationService } from '../../shared/services/translation.service.ts';
+import { TranslationService } from '../../shared/services/translation.service.ts';
 import { UserDto } from './dtos/user.dto.ts';
-import type { UsersPageOptionsDto } from './dtos/users-page-options.dto.ts';
+import { UsersPageOptionsDto } from './dtos/users-page-options.dto.ts';
 import type { UserEntity } from './user.entity.ts';
-import type { UserService } from './user.service.ts';
+import { UserService } from './user.service.ts';
 
 @Controller('users')
 @ApiTags('users')
@@ -33,7 +33,7 @@ export class UserController {
   ) {}
 
   @Get('admin')
-  @Auth([RoleType.USER])
+  @Auth([RoleType.AGENT])
   @HttpCode(HttpStatus.OK)
   @UseLanguageInterceptor()
   async admin(@AuthUser() user: UserEntity) {
@@ -42,15 +42,15 @@ export class UserController {
     );
 
     return {
-      text: `${translation} ${user.firstName}`,
+      text: `${translation} ${user.email}`,
     };
   }
 
   @Get()
-  @Auth([RoleType.USER])
+  @Auth([RoleType.AGENT, RoleType.VISITOR])
   @HttpCode(HttpStatus.OK)
   @ApiPageResponse({
-    description: 'Get users list',
+    description: 'Get paginated users list with optional search',
     type: PageDto,
   })
   getUsers(
@@ -61,7 +61,7 @@ export class UserController {
   }
 
   @Get(':id')
-  @Auth([RoleType.USER])
+  @Auth([RoleType.AGENT, RoleType.VISITOR])
   @HttpCode(HttpStatus.OK)
   @ApiUUIDParam('id')
   @ApiResponse({

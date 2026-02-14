@@ -1,8 +1,9 @@
 import type { CanActivate, ExecutionContext } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
-import type { Reflector } from '@nestjs/core';
+import { Reflector } from '@nestjs/core';
 
 import type { RoleType } from '../constants/role-type.ts';
+import { Roles } from '../decorators/roles.decorator.ts';
 import type { UserEntity } from '../modules/user/user.entity.ts';
 
 @Injectable()
@@ -11,7 +12,7 @@ export class RolesGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const roles = this.reflector.get<RoleType[] | undefined>(
-      'roles',
+      Roles,
       context.getHandler(),
     );
 

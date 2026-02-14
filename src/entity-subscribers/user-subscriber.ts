@@ -21,11 +21,24 @@ export class UserSubscriber implements EntitySubscriberInterface<UserEntity> {
   }
 
   beforeUpdate(event: UpdateEvent<UserEntity>): void {
-    // FIXME check event.databaseEntity.password
-    const entity = event.entity as UserEntity;
-
-    if (entity.password !== event.databaseEntity.password) {
-      entity.password = generateHash(entity.password!);
+    if (!event.entity) {
+      return;
     }
+
+    const entity = event.entity as Partial<UserEntity>;
+    const databaseEntity = event.databaseEntity as
+      | Partial<UserEntity>
+      | undefined;
+    const password = entity.password;
+
+    if (typeof password !== 'string' || password === '') {
+      return;
+    }
+
+    if (password === databaseEntity?.password) {
+      return;
+    }
+
+    entity.password = generateHash(password);
   }
 }

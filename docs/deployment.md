@@ -97,11 +97,26 @@ NATS_ENABLED=false
 NATS_HOST=your-nats-host
 NATS_PORT=4222
 
-# AWS S3 (if using file uploads)
+# S3-compatible storage (AWS S3, Supabase Storage, MinIO)
+STORAGE_PROVIDER=aws
+SUPABASE_PROJECT_ID=
 AWS_S3_BUCKET_NAME=your-bucket-name
-AWS_ACCESS_KEY_ID=your-access-key
-AWS_SECRET_ACCESS_KEY=your-secret-key
-AWS_DEFAULT_S3_REGION=us-east-1
+AWS_S3_ACCESS_KEY_ID=your-access-key
+AWS_S3_SECRET_ACCESS_KEY=your-secret-key
+AWS_S3_BUCKET_REGION=us-east-1
+AWS_S3_API_VERSION=2010-12-01
+AWS_S3_BUCKET_ENDPOINT=
+AWS_S3_FORCE_PATH_STYLE=false
+AWS_S3_OBJECT_ACL=public-read
+STORAGE_PUBLIC_URL_BASE=
+
+# Supabase example
+# STORAGE_PROVIDER=supabase
+# SUPABASE_PROJECT_ID=[project_id]
+# AWS_S3_BUCKET_ENDPOINT=https://[project_id].storage.supabase.co/storage/v1/s3
+# AWS_S3_FORCE_PATH_STYLE=true
+# AWS_S3_OBJECT_ACL=
+# STORAGE_PUBLIC_URL_BASE=https://[project_id].supabase.co/storage/v1/object/public/[bucket]
 
 # Monitoring
 SENTRY_DSN=your-sentry-dsn

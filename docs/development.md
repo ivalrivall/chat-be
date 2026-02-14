@@ -12,6 +12,7 @@
   - [Project Structure](#project-structure)
   - [Code Generation](#code-generation)
   - [Environment Variables](#environment-variables)
+  - [Supabase GraphQL Integration](#supabase-graphql-integration)
   - [Docker Development](#docker-development)
     - [Prerequisites](#prerequisites)
     - [Running with Docker](#running-with-docker)
@@ -258,7 +259,8 @@ DB_DATABASE=nest_boilerplate
 ENABLE_ORM_LOGS=true
 
 # JWT Authentication
-JWT_SECRET=your-super-secret-jwt-key
+JWT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n"
+JWT_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\\n...\\n-----END PUBLIC KEY-----\\n"
 JWT_EXPIRATION_TIME=3600
 
 # CORS
@@ -275,6 +277,80 @@ THROTTLE_LIMIT=10
 NATS_ENABLED=false
 NATS_HOST=localhost
 NATS_PORT=4222
+
+# RabbitMQ
+RABBITMQ_URI=
+RABBITMQ_HOST=localhost
+RABBITMQ_PORT=5672
+RABBITMQ_USERNAME=guest
+RABBITMQ_PASSWORD=guest
+RABBITMQ_VHOST=/
+RABBITMQ_CHAT_EXCHANGE=chat.events
+RABBITMQ_CHAT_DLX_EXCHANGE=chat.dlx
+RABBITMQ_CHAT_QUEUE_PREFIX=chat.message.send
+RABBITMQ_CHAT_DLQ_NAME=chat.message.send.dlq
+RABBITMQ_CHAT_PARTITION_COUNT=8
+RABBITMQ_CHAT_MAX_RETRIES=5
+RABBITMQ_CHAT_CONSUMER_PREFETCH=1
+```
+
+## Supabase GraphQL Integration
+
+This project provides a reusable `SupabaseGraphqlService` in `SharedModule` for server-to-server GraphQL requests to Supabase.
+
+Configure the following variables in `.env`:
+
+```env
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_GRAPHQL_URL=
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+```
+
+Notes:
+- `SUPABASE_GRAPHQL_URL` is optional. When empty, the app uses `${SUPABASE_URL}/graphql/v1`.
+- Requests are authenticated with both `apikey` and `Authorization: Bearer <service-role-key>` headers.
+- Use the service-role key only in backend environments.
+
+Per-module GraphQL proxy endpoints are available:
+- `POST /auth/graphql`
+- `POST /users/graphql`
+- `POST /posts/graphql`
+- `POST /chats/graphql`
+
+Request body format:
+
+```json
+{
+  "query": "query Example($id: uuid!) { users_by_pk(id: $id) { id email } }",
+  "variables": {
+    "id": "00000000-0000-0000-0000-000000000000"
+  }
+}
+```
+
+Example chat conversation list query for Supabase pg_graphql:
+
+```json
+{
+  "query": "query GetConversationList($first: Int!, $offset: Int!) { chatsCollection(first: $first, offset: $offset, orderBy: [{ updatedAt: DescNullsLast }]) { edges { node { id createdAt updatedAt name isGroup chatParticipantsCollection { edges { node { id userId users { email } } } } chatMessagesCollection(first: 1, orderBy: [{ sentAt: DescNullsLast }]) { edges { node { id createdAt updatedAt chatId senderId content messageType status sequence sentAt chatMessageAttachmentsCollection(first: 1) { edges { node { id createdAt updatedAt fileKey mimeType size attachmentType } } } } } } } } totalCount } }",
+  "variables": {
+    "first": 10,
+    "offset": 0
+  }
+}
+```
+
+Important:
+- Supabase pg_graphql does not use Hasura-style root fields such as `chats` or `chats_aggregate`.
+- Use `...Collection` fields and `totalCount` instead.
+
+Generate JWT key values for `.env`:
+
+```bash
+openssl genrsa -out jwt_private.pem 2048
+openssl rsa -in jwt_private.pem -pubout -out jwt_public.pem
+echo "JWT_PRIVATE_KEY=\"$(awk 'NF {sub(/\r/, ""); printf "%s\\\\n",$0;}' jwt_private.pem)\""
+echo "JWT_PUBLIC_KEY=\"$(awk 'NF {sub(/\r/, ""); printf "%s\\\\n",$0;}' jwt_public.pem)\""
 ```
 
 ## Docker Development
@@ -309,7 +385,17 @@ The `docker-compose.yml` includes:
 
 - **app**: NestJS application
 - **postgres**: PostgreSQL database
-- **adminer**: Database administration tool (available at `http://localhost:8080`)
+- **pgadmin**: Database administration tool (available at `http://localhost:8080`)
+- **redis**: Redis cache
+- **rabbitmq**: RabbitMQ broker and management UI (available at `http://localhost:15672`)
+
+RabbitMQ credentials are configured via environment variables:
+
+- `RABBITMQ_USERNAME`
+- `RABBITMQ_PASSWORD`
+- `RABBITMQ_VHOST`
+
+If `RABBITMQ_URI` is provided, it takes precedence over host/port/credential variables.
 
 For MySQL development, use:
 ```bash

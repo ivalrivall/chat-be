@@ -18,6 +18,7 @@ import { initializeTransactionalContext } from 'typeorm-transactional';
 import { AppModule } from './app.module.ts';
 import { HttpExceptionFilter } from './filters/bad-request.filter.ts';
 import { QueryFailedFilter } from './filters/query-failed.filter.ts';
+import { ApiResponseInterceptor } from './interceptors/api-response.interceptor.ts';
 import { TranslationInterceptor } from './interceptors/translation-interceptor.service.ts';
 import { setupSwagger } from './setup-swagger.ts';
 import { ApiConfigService } from './shared/services/api-config.service.ts';
@@ -26,15 +27,22 @@ import { SharedModule } from './shared/shared.module.ts';
 
 export async function bootstrap(): Promise<NestExpressApplication> {
   initializeTransactionalContext();
+  const corsOrigins =
+    process.env.CORS_ORIGINS?.split(',')
+      .map((origin) => origin.trim())
+      .filter((origin) => origin.length > 0) ?? [];
   const app = await NestFactory.create<NestExpressApplication>(
     AppModule,
     new ExpressAdapter(),
     {
       cors: {
-        origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'],
+        origin:
+          corsOrigins.length > 0
+            ? corsOrigins
+            : ['http://localhost:5173', 'http://localhost:3000'],
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
         credentials: true,
-      }
+      },
     },
   );
   app.enable('trust proxy'); // only if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
@@ -56,6 +64,7 @@ export async function bootstrap(): Promise<NestExpressApplication> {
     new TranslationInterceptor(
       app.select(SharedModule).get(TranslationService),
     ),
+    new ApiResponseInterceptor(),
   );
 
   app.useGlobalPipes(
@@ -96,12 +105,10 @@ export async function bootstrap(): Promise<NestExpressApplication> {
 
   const port = configService.appConfig.port;
 
-  if ((<any>import.meta).env?.PROD) {
-    await app.listen(port);
-    console.info(`server running on ${await app.getUrl()}`);
-  }
+  await app.listen(port, '127.0.0.1');
+  console.info(`server running on ${await app.getUrl()}`);
 
   return app;
 }
 
-export const viteNodeApp = bootstrap();
+export const viteNodeApp = await bootstrap();

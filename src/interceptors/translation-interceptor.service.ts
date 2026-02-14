@@ -7,10 +7,10 @@ import { Injectable } from '@nestjs/common';
 import type { Observable } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
 
-import type { AbstractDto } from '../common/dto/abstract.dto.ts';
-import type { TranslationService } from '../shared/services/translation.service.ts';
+import { AbstractDto } from '../common/dto/abstract.dto.ts';
+import { PageDto } from '../common/dto/page.dto.ts';
+import { TranslationService } from '../shared/services/translation.service.ts';
 
-// FIXME: add implementation
 @Injectable()
 export class TranslationInterceptor implements NestInterceptor {
   constructor(private readonly translationService: TranslationService) {}
@@ -18,13 +18,37 @@ export class TranslationInterceptor implements NestInterceptor {
   public intercept(
     _context: ExecutionContext,
     next: CallHandler,
-  ): Observable<AbstractDto> {
-    return next
-      .handle()
-      .pipe(
-        mergeMap((data: AbstractDto) =>
-          this.translationService.translateNecessaryKeys(data),
-        ),
-      );
+  ): Observable<unknown> {
+    return next.handle().pipe(
+      mergeMap(async (data: unknown) => {
+        if (data instanceof PageDto) {
+          const translatedData = await this.translateArray(data.data);
+
+          return new PageDto(translatedData, data.meta);
+        }
+
+        if (Array.isArray(data)) {
+          return this.translateArray(data);
+        }
+
+        if (data instanceof AbstractDto) {
+          return this.translationService.translateNecessaryKeys(data);
+        }
+
+        return data;
+      }),
+    );
+  }
+
+  private async translateArray(data: unknown[]): Promise<unknown[]> {
+    return Promise.all(
+      data.map((item) => {
+        if (item instanceof AbstractDto) {
+          return this.translationService.translateNecessaryKeys(item);
+        }
+
+        return item;
+      }),
+    );
   }
 }

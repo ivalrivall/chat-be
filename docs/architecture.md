@@ -86,7 +86,7 @@ awesome-nest-boilerplate/
 │   │   └── health-checker/   # Health check module
 │   ├── providers/             # Custom providers
 │   ├── shared/                # Shared services and utilities
-│   │   └── services/         # Global services (ApiConfigService, TranslationService)
+│   │   └── services/         # Global services (ApiConfigService, TranslationService, SupabaseGraphqlService)
 │   ├── validators/            # Custom validators
 │   ├── app.module.ts         # Root application module
 │   ├── main.ts               # Application entry point
@@ -388,6 +388,24 @@ export class ApiConfigService {
   }
 }
 ```
+
+### External Integrations
+
+Shared integration services are exposed through `SharedModule` so feature modules can reuse external infrastructure clients.
+
+- `AwsS3Service`: object storage uploads
+- `RedisService`: caching/pub-sub primitives
+- `RabbitMqService`: async messaging topology and publishing
+- `SupabaseGraphqlService`: server-to-server GraphQL requests to Supabase using configured service role credentials
+
+### Chat Message Retrieval and Search
+
+The chat module supports paginated message retrieval through both REST and Supabase GraphQL-backed endpoints.
+
+- REST endpoint: `GET /chats/:chatId/messages`
+- GraphQL-backed endpoint: `GET /chats/:chatId/messages/graphql`
+
+Both endpoints support an optional `search` query parameter to filter by message `content` text using case-insensitive matching. Access control is enforced before query execution by validating that the authenticated user is a participant of the requested chat.
 
 ## Technology Stack
 

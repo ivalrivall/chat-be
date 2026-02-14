@@ -1,26 +1,107 @@
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common';
-import { Catch, UnprocessableEntityException } from '@nestjs/common';
+import { Catch, HttpException } from '@nestjs/common';
 import type { Reflector } from '@nestjs/core';
 import type { ValidationError } from 'class-validator';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import _ from 'lodash';
 
-@Catch(UnprocessableEntityException)
-export class HttpExceptionFilter
-  implements ExceptionFilter<UnprocessableEntityException>
-{
+type HttpExceptionPayload =
+  | string
+  | {
+      message?: string | string[] | ValidationError[];
+      error?: string;
+      errors?: unknown[];
+    };
+
+@Catch(HttpException)
+export class HttpExceptionFilter implements ExceptionFilter<HttpException> {
   constructor(public reflector: Reflector) {}
 
-  catch(exception: UnprocessableEntityException, host: ArgumentsHost): void {
+  catch(exception: HttpException, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<Request>();
     const statusCode = exception.getStatus();
-    const r = exception.getResponse() as { message: ValidationError[] };
+    const payload = exception.getResponse() as HttpExceptionPayload;
+    const path = request.originalUrl;
+    const timestamp = new Date().toISOString();
 
-    const validationErrors = r.message;
-    this.validationFilter(validationErrors);
+    if (statusCode === 422) {
+      const validationErrors = this.getValidationErrors(payload);
 
-    response.status(statusCode).json(r);
+      this.validationFilter(validationErrors);
+      response.status(statusCode).json({
+        success: false,
+        statusCode,
+        message: 'Validation failed',
+        errors: validationErrors,
+        errorCode: 'VALIDATION_ERROR',
+        timestamp,
+        path,
+      });
+
+      return;
+    }
+
+    const message = this.getMessageFromPayload(payload) ?? exception.message;
+    const errors = this.getErrorsFromPayload(payload);
+
+    response.status(statusCode).json({
+      success: false,
+      statusCode,
+      message,
+      errors,
+      timestamp,
+      path,
+    });
+  }
+
+  private getValidationErrors(
+    payload: HttpExceptionPayload,
+  ): ValidationError[] {
+    if (typeof payload === 'string') {
+      return [];
+    }
+
+    if (!Array.isArray(payload.message)) {
+      return [];
+    }
+
+    return payload.message.filter(
+      (item): item is ValidationError => typeof item !== 'string',
+    );
+  }
+
+  private getMessageFromPayload(
+    payload: HttpExceptionPayload,
+  ): string | undefined {
+    if (typeof payload === 'string') {
+      return payload;
+    }
+
+    if (Array.isArray(payload.message)) {
+      const firstMessage = payload.message[0];
+
+      return typeof firstMessage === 'string' ? firstMessage : undefined;
+    }
+
+    return payload.message;
+  }
+
+  private getErrorsFromPayload(payload: HttpExceptionPayload): unknown[] {
+    if (typeof payload === 'string') {
+      return [];
+    }
+
+    if (Array.isArray(payload.errors)) {
+      return payload.errors;
+    }
+
+    if (Array.isArray(payload.message)) {
+      return payload.message;
+    }
+
+    return [];
   }
 
   private validationFilter(validationErrors: ValidationError[]): void {

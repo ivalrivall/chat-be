@@ -82,6 +82,11 @@ db-data
 .cache
 .DS_Store
 
+# AI agents
+.cline
+.cursor
+.agents
+AGENTS.md
 
 # Local History
 .history
@@ -93,3 +98,7 @@ db-data
 .vuepress/.cache
 # VuePress default build output directory
 .vuepress/dist
+
+# JWT secret file
+jwt_private.pem
+jwt_public.pem

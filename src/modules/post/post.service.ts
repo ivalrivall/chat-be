@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import type { CommandBus } from '@nestjs/cqrs';
+import { CommandBus } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional';
 
-import type { PageDto } from '../../common/dto/page.dto.ts';
+import { PageDto } from '../../common/dto/page.dto.ts';
 import { CreatePostCommand } from './commands/create-post.command.ts';
 import type { CreatePostDto } from './dtos/create-post.dto.ts';
 import type { PostDto } from './dtos/post.dto.ts';
@@ -37,7 +37,7 @@ export class PostService {
     const [items, pageMetaDto] =
       await queryBuilder.paginate(postPageOptionsDto);
 
-    return items.toPageDto(pageMetaDto);
+    return new PageDto(items.toDtos(), pageMetaDto);
   }
 
   async getSinglePost(id: Uuid): Promise<PostEntity> {

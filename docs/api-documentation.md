@@ -22,6 +22,15 @@ This guide covers the API documentation practices and standards used in the Awes
     - [Post Management](#post-management)
       - [POST /posts](#post-posts)
       - [GET /posts/:id](#get-postsid)
+    - [Chat Management](#chat-management)
+      - [GET /chats](#get-chats)
+      - [GET /chats/:chatId/messages](#get-chatschatidmessages)
+      - [GET /chats/:chatId/messages/graphql](#get-chatschatidmessagesgraphql)
+    - [GraphQL Proxy Endpoints](#graphql-proxy-endpoints)
+      - [POST /auth/graphql](#post-authgraphql)
+      - [POST /users/graphql](#post-usersgraphql)
+      - [POST /posts/graphql](#post-postsgraphql)
+      - [POST /chats/graphql](#post-chatsgraphql)
     - [Health Check](#health-check)
       - [GET /health](#get-health)
   - [Request/Response Patterns](#requestresponse-patterns)
@@ -262,6 +271,129 @@ Get post by ID.
 }
 ```
 
+### Chat Management
+
+#### GET /chats
+Get paginated list of chats for the authenticated user with WhatsApp-like last message preview.
+
+**Response**:
+```json
+{
+  "data": [
+    {
+      "id": "chat-uuid",
+      "name": "Customer Support",
+      "isGroup": false,
+      "participants": [
+        {
+          "id": "user-uuid",
+          "name": "agent@example.com"
+        }
+      ],
+      "lastMessage": {
+        "messageType": "MIXED",
+        "content": "Hello, how can I help you?",
+        "sentAt": "2026-02-13T13:45:11.000Z",
+        "senderEmail": "agent@example.com",
+        "attachment": {
+          "id": "attachment-uuid",
+          "fileKey": "image/abc-123.jpeg",
+          "mimeType": "image/jpeg",
+          "size": 45812,
+          "attachmentType": "IMAGE",
+          "createdAt": "2026-02-13T13:45:11.000Z",
+          "updatedAt": "2026-02-13T13:45:11.000Z"
+        }
+      },
+      "createdAt": "2026-02-13T13:40:00.000Z",
+      "updatedAt": "2026-02-13T13:45:11.000Z"
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "take": 10,
+    "itemCount": 1,
+    "pageCount": 1,
+    "hasPreviousPage": false,
+    "hasNextPage": false
+  }
+}
+```
+
+`lastMessage` is optional and will be omitted when a chat has no sent message yet.
+
+`lastMessage.attachment` is included only when `lastMessage.messageType` is `ATTACHMENT` or `MIXED`.
+
+#### GET /chats/:chatId/messages
+Get paginated list of messages in a chat for the authenticated participant.
+
+**Query Parameters**:
+- `page` (number, optional): Page number (default: 1)
+- `take` (number, optional): Items per page (default: 10)
+- `order` (string, optional): Sort order (ASC/DESC)
+- `search` (string, optional): Filter messages by content text (case-insensitive)
+
+**Example**:
+```http
+GET /chats/00000000-0000-0000-0000-000000000000/messages?page=1&take=20&order=DESC&search=hello
+```
+
+`search` only filters message `content` text.
+
+#### GET /chats/:chatId/messages/graphql
+Get chat messages through Supabase GraphQL for a chat where current user is participant, with optional content search.
+
+**Query Parameters**:
+- `page` (number, optional): Page number (default: 1)
+- `take` (number, optional): Items per page (default: 10)
+- `order` (string, optional): Sort order (ASC/DESC)
+- `search` (string, optional): Filter messages by content text (case-insensitive)
+
+**Example**:
+```http
+GET /chats/00000000-0000-0000-0000-000000000000/messages/graphql?page=1&take=20&order=DESC&search=invoice
+```
+
+`search` only filters message `content` text.
+
+### GraphQL Proxy Endpoints
+
+The application exposes per-module proxy endpoints that forward GraphQL requests to Supabase using backend credentials.
+
+#### POST /auth/graphql
+Public proxy endpoint for GraphQL queries.
+
+#### POST /users/graphql
+Protected proxy endpoint (requires `AGENT` role).
+
+#### POST /posts/graphql
+Protected proxy endpoint (requires `VISITOR` or `AGENT` role).
+
+#### POST /chats/graphql
+Protected proxy endpoint (requires `VISITOR` or `AGENT` role).
+
+**Request Body** (same for all endpoints):
+```json
+{
+  "query": "query Example($id: uuid!) { users_by_pk(id: $id) { id email } }",
+  "variables": {
+    "id": "00000000-0000-0000-0000-000000000000"
+  }
+}
+```
+
+**Response**:
+```json
+{
+  "data": {
+    "users_by_pk": {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "email": "user@example.com"
+    }
+  }
+}
+```
+
 ### Health Check
 
 #### GET /health
@@ -294,17 +426,28 @@ All API responses follow a consistent structure:
 **Success Response**:
 ```json
 {
+  "success": true,
+  "statusCode": 200,
+  "message": "success",
   "data": { /* response data */ },
-  "meta": { /* metadata (for paginated responses) */ }
+  "timestamp": "2026-02-13T15:30:00.000Z",
+  "path": "/users/me"
 }
 ```
 
 **Single Resource**:
 ```json
 {
-  "id": "uuid",
-  "name": "Resource Name",
-  "createdAt": "2023-01-01T00:00:00.000Z"
+  "success": true,
+  "statusCode": 200,
+  "message": "success",
+  "data": {
+    "id": "uuid",
+    "name": "Resource Name",
+    "createdAt": "2023-01-01T00:00:00.000Z"
+  },
+  "timestamp": "2026-02-13T15:30:00.000Z",
+  "path": "/resources/uuid"
 }
 ```
 
@@ -320,6 +463,9 @@ GET /users?page=1&take=10&order=ASC
 **Paginated Response**:
 ```json
 {
+  "success": true,
+  "statusCode": 200,
+  "message": "success",
   "data": [
     {
       "id": "uuid",
@@ -333,7 +479,9 @@ GET /users?page=1&take=10&order=ASC
     "pageCount": 1,
     "hasPreviousPage": false,
     "hasNextPage": false
-  }
+  },
+  "timestamp": "2026-02-13T15:30:00.000Z",
+  "path": "/users?page=1&take=10"
 }
 ```
 
@@ -343,11 +491,13 @@ All error responses follow a consistent format:
 
 ```json
 {
+  "success": false,
   "statusCode": 400,
-  "message": "Validation failed",
-  "error": "Bad Request",
-  "timestamp": "2023-01-01T00:00:00.000Z",
-  "path": "/api/users"
+  "message": "Bad Request",
+  "errors": [],
+  "errorCode": "REQUEST_ERROR",
+  "timestamp": "2026-02-13T15:30:00.000Z",
+  "path": "/users"
 }
 ```
 
@@ -460,8 +610,10 @@ The API uses standard HTTP status codes:
 ```typescript
 // Validation error (422)
 {
+  "success": false,
   "statusCode": 422,
-  "message": [
+  "message": "Validation failed",
+  "errors": [
     {
       "property": "email",
       "constraints": {
@@ -469,21 +621,29 @@ The API uses standard HTTP status codes:
       }
     }
   ],
-  "error": "Unprocessable Entity"
+  "errorCode": "VALIDATION_ERROR",
+  "timestamp": "2026-02-13T15:30:00.000Z",
+  "path": "/auth/register"
 }
 
 // Not found error (404)
 {
+  "success": false,
   "statusCode": 404,
   "message": "User not found",
-  "error": "Not Found"
+  "errors": [],
+  "timestamp": "2026-02-13T15:30:00.000Z",
+  "path": "/users/uuid"
 }
 
 // Unauthorized error (401)
 {
+  "success": false,
   "statusCode": 401,
   "message": "Unauthorized",
-  "error": "Unauthorized"
+  "errors": [],
+  "timestamp": "2026-02-13T15:30:00.000Z",
+  "path": "/users"
 }
 ```
 

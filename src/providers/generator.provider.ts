@@ -15,7 +15,7 @@ export class GeneratorProvider {
       throw new TypeError('key is required');
     }
 
-    return `https://s3.${process.env.AWS_S3_BUCKET_NAME_REGION}.amazonaws.com/${process.env.AWS_S3_BUCKET_NAME}/${key}`;
+    return `${GeneratorProvider.getStoragePublicUrlBase()}/${key}`;
   }
 
   static getS3Key(publicUrl: string): string {
@@ -23,15 +23,40 @@ export class GeneratorProvider {
       throw new TypeError('key is required');
     }
 
-    const exec = new RegExp(
-      `(?<=https://s3.${process.env.AWS_S3_BUCKET_NAME_REGION}.amazonaws.com/${process.env.AWS_S3_BUCKET_NAME}/).*`,
-    ).exec(publicUrl);
+    const publicUrlBase = `${GeneratorProvider.getStoragePublicUrlBase()}/`;
 
-    if (!exec) {
+    if (!publicUrl.startsWith(publicUrlBase)) {
       throw new TypeError('publicUrl is invalid');
     }
 
-    return exec[0];
+    return publicUrl.slice(publicUrlBase.length);
+  }
+
+  private static getStoragePublicUrlBase(): string {
+    const storagePublicUrlBase = process.env.STORAGE_PUBLIC_URL_BASE;
+
+    if (storagePublicUrlBase) {
+      let normalizedStoragePublicUrlBase = storagePublicUrlBase;
+
+      while (normalizedStoragePublicUrlBase.endsWith('/')) {
+        normalizedStoragePublicUrlBase = normalizedStoragePublicUrlBase.slice(
+          0,
+          -1,
+        );
+      }
+
+      return normalizedStoragePublicUrlBase;
+    }
+
+    const bucketName = process.env.AWS_S3_BUCKET_NAME;
+    const bucketRegion =
+      process.env.AWS_S3_BUCKET_REGION ?? process.env.AWS_S3_BUCKET_NAME_REGION;
+
+    if (!bucketName || !bucketRegion) {
+      throw new TypeError('storage public URL base is not configured');
+    }
+
+    return `https://s3.${bucketRegion}.amazonaws.com/${bucketName}`;
   }
 
   static generateVerificationCode(): string {

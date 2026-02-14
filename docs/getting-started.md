@@ -204,7 +204,8 @@ After creating your project, complete these steps:
   DB_DATABASE=nest_boilerplate
 
   # JWT
-  JWT_SECRET=your-secret-key
+  JWT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n"
+  JWT_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\\n...\\n-----END PUBLIC KEY-----\\n"
   JWT_EXPIRATION_TIME=3600
 
   # Application
@@ -213,7 +214,21 @@ After creating your project, complete these steps:
 
   # CORS
   CORS_ORIGINS=http://localhost:3000
+
+  # Supabase GraphQL (optional integration)
+  SUPABASE_URL=https://your-project-ref.supabase.co
+  SUPABASE_GRAPHQL_URL=
+  SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
   ```
+
+Generate JWT key values for `.env`:
+
+```bash
+openssl genrsa -out jwt_private.pem 2048
+openssl rsa -in jwt_private.pem -pubout -out jwt_public.pem
+echo "JWT_PRIVATE_KEY=\"$(awk 'NF {sub(/\r/, ""); printf "%s\\\\n",$0;}' jwt_private.pem)\""
+echo "JWT_PUBLIC_KEY=\"$(awk 'NF {sub(/\r/, ""); printf "%s\\\\n",$0;}' jwt_public.pem)\""
+```
 
 ### 3. Database Setup
 - [ ] Set up your PostgreSQL database
@@ -241,8 +256,12 @@ Key environment variables:
 | `PORT` | Application port | `3000` |
 | `DB_HOST` | Database host | `localhost` |
 | `DB_PORT` | Database port | `5432` |
-| `JWT_SECRET` | JWT signing secret | Required |
+| `JWT_PRIVATE_KEY` | JWT private key in escaped single-line PEM | Required |
+| `JWT_PUBLIC_KEY` | JWT public key in escaped single-line PEM | Required |
 | `CORS_ORIGINS` | Allowed CORS origins | `http://localhost:3000` |
+| `SUPABASE_URL` | Supabase project URL used to build GraphQL endpoint | Optional |
+| `SUPABASE_GRAPHQL_URL` | Explicit Supabase GraphQL endpoint override | Optional |
+| `SUPABASE_SERVICE_ROLE_KEY` | Backend token for Supabase GraphQL requests | Optional |
 
 ## Next Steps
 
