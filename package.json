@@ -1,8 +1,8 @@
 {
-  "name": "awesome-nestjs-boilerplate",
+  "name": "chat-be",
   "version": "11.0.0",
-  "description": "Awesome NestJS Boilerplate, Typescript, Postgres, TypeORM",
-  "author": "Narek Hakobyan <narek.hakobyan.07@gmail.com>",
+  "description": "Chat BE",
+  "author": "Ival <ivalrival95@gmail.com>",
   "private": true,
   "license": "MIT",
   "type": "module",

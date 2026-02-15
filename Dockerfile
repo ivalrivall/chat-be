@@ -1,36 +1,25 @@
-FROM node:24 AS deps
-
-WORKDIR /usr/src/app
-
-COPY package.json yarn.lock ./
-
-RUN yarn install --network-timeout 600000
-
-FROM node:24 AS build
-
-WORKDIR /usr/src/app
-
-COPY --from=deps /usr/src/app/node_modules ./node_modules
-COPY . ./
-
-RUN yarn build:prod
-RUN npm prune --omit=dev
-
 FROM node:24
 
-ARG PORT=3000
-
-ENV NODE_ENV=production
-
-RUN mkdir -p /usr/src/app
-
 WORKDIR /usr/src/app
 
-COPY --from=build /usr/src/app/dist /usr/src/app/dist
-COPY --from=build /usr/src/app/node_modules /usr/src/app/node_modules
+# Copy package files
+COPY package.json yarn.lock ./
 
-COPY . /usr/src/app
+# Install dependencies
+RUN yarn install --ignore-engines
 
+# Copy source code
+COPY . .
+
+# Build the app - run with verbose to debug
+RUN node node_modules/@nestjs/cli/bin/nest.js build --verbose 2>&1
+
+# Prune dev dependencies
+RUN npm prune --omit=dev
+
+# Expose port
+ARG PORT=3000
 EXPOSE $PORT
 
+# Start the app
 CMD [ "node", "dist/main.js" ]
