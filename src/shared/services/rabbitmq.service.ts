@@ -2,7 +2,7 @@ import type { OnModuleDestroy } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
 import type {
   Channel,
-  Connection,
+  ChannelModel,
   ConsumeMessage,
   Message,
   Options,
@@ -14,7 +14,7 @@ import { ApiConfigService } from './api-config.service.ts';
 
 @Injectable()
 export class RabbitMqService implements OnModuleDestroy {
-  private connection?: Connection;
+  private connection?: ChannelModel;
 
   private channel?: Channel;
 
@@ -27,12 +27,13 @@ export class RabbitMqService implements OnModuleDestroy {
       return this.channel;
     }
 
-    this.connection = await connect(this.apiConfigService.rabbitMqConfig.uri);
+    const connection = await connect(this.apiConfigService.rabbitMqConfig.uri);
+    const channel = await connection.createChannel();
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-    this.channel = await this.connection.createChannel();
+    this.connection = connection;
+    this.channel = channel;
 
-    return this.channel;
+    return channel;
   }
 
   private getPartitionQueueNames(): string[] {
@@ -212,7 +213,6 @@ export class RabbitMqService implements OnModuleDestroy {
 
   async onModuleDestroy(): Promise<void> {
     await this.channel?.close();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await this.connection?.close();
   }
 }

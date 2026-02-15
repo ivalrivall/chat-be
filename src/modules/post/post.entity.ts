@@ -13,7 +13,7 @@ export class PostEntity extends AbstractEntity<PostDto> {
   @Column({ type: 'uuid' })
   userId!: Uuid;
 
-  @ManyToOne(() => UserEntity, (userEntity) => userEntity.posts, {
+  @ManyToOne(() => UserEntity, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })

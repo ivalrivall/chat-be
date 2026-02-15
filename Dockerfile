@@ -1,18 +1,22 @@
-FROM node:lts AS dist
+FROM node:24 AS deps
+
+WORKDIR /usr/src/app
+
 COPY package.json yarn.lock ./
 
-RUN yarn install
+RUN yarn install --network-timeout 600000
 
+FROM node:24 AS build
+
+WORKDIR /usr/src/app
+
+COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY . ./
 
 RUN yarn build:prod
+RUN npm prune --omit=dev
 
-FROM node:lts AS node_modules
-COPY package.json yarn.lock ./
-
-RUN yarn install --prod
-
-FROM node:lts
+FROM node:24
 
 ARG PORT=3000
 
@@ -22,11 +26,11 @@ RUN mkdir -p /usr/src/app
 
 WORKDIR /usr/src/app
 
-COPY --from=dist dist /usr/src/app/dist
-COPY --from=node_modules node_modules /usr/src/app/node_modules
+COPY --from=build /usr/src/app/dist /usr/src/app/dist
+COPY --from=build /usr/src/app/node_modules /usr/src/app/node_modules
 
 COPY . /usr/src/app
 
 EXPOSE $PORT
 
-CMD [ "yarn", "start:prod" ]
+CMD [ "node", "dist/main.js" ]

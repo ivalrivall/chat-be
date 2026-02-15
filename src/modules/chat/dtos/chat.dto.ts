@@ -13,7 +13,7 @@ import type { ChatMessageEntity } from '../chat-message.entity.ts';
 import { ChatMessageType } from '../constants/chat-message-type.ts';
 import { ChatMessageAttachmentDto } from './chat-message-attachment.dto.ts';
 
-class ChatParticipantDto {
+export class ChatParticipantDto {
   @UUIDField()
   id!: Uuid;
 
