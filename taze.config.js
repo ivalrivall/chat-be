@@ -1,10 +1,8 @@
-import { defineConfig } from 'taze'
+import { defineConfig } from 'taze';
 
 export default defineConfig({
   // ignore packages from bumping
-  exclude: [
-    'typeorm',
-  ],
+  exclude: ['typeorm'],
   // fetch the latest package info from registry without cache
   force: true,
   // bumping mode, can be 'latest', 'major', 'minor', 'patch', 'ignore'
@@ -14,10 +12,7 @@ export default defineConfig({
   // run `npm install` or `yarn install` right after bumping
   install: true,
   // ignore paths for looking for package.json in monorepo
-  ignorePaths: [
-    '**/node_modules/**',
-    '**/test/**',
-  ],
+  ignorePaths: ['**/node_modules/**', '**/test/**'],
   // ignore package.json that in other workspace (with their own .git,pnpm-workspace.yaml,etc.)
   ignoreOtherWorkspaces: true,
   // override with different bumping mode for each package
@@ -29,6 +24,6 @@ export default defineConfig({
   // },
   // disable checking for "overrides" package.json field
   depFields: {
-    overrides: false
-  }
-})
+    overrides: false,
+  },
+});

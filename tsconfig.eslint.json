@@ -8,13 +8,12 @@
     "./eslint.config.mjs"
   ],
   "exclude": [
-    ".vuepress/**/*",
+    ".vuepress/*",
     "node_modules/**/*",
     "dist",
     "**/*.*spec.ts",
     ".agents",
     ".cline",
-    ".cursor",
-    ".vuepress"
+    ".cursor"
   ]
 }

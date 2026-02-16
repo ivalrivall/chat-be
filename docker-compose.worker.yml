@@ -1,0 +1,17 @@
+networks:
+  shared_backend:
+    external: true
+    name: chat_resource_backend
+
+services:
+  chat-worker:
+    env_file:
+      - .env
+    environment:
+      - CHAT_WORKER_ENABLED=true
+    container_name: chat-be-worker
+    restart: unless-stopped
+    build: .
+    command: bun src/chat-worker.main.ts
+    networks:
+      - shared_backend

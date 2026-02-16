@@ -8,9 +8,10 @@ import { PostTranslationEntity } from '../post-translation.entity.ts';
 import { CreatePostCommand } from './create-post.command.ts';
 
 @CommandHandler(CreatePostCommand)
-export class CreatePostHandler
-  implements ICommandHandler<CreatePostCommand, PostEntity>
-{
+export class CreatePostHandler implements ICommandHandler<
+  CreatePostCommand,
+  PostEntity
+> {
   constructor(
     @InjectRepository(PostEntity)
     private postRepository: Repository<PostEntity>,
@@ -25,7 +26,6 @@ export class CreatePostHandler
 
     await this.postRepository.save(postEntity);
 
-    // FIXME: Create generic function for translation creation
     for (const createTranslationDto of createPostDto.title) {
       const languageCode = createTranslationDto.languageCode;
       const translationEntity = this.postTranslationRepository.create({

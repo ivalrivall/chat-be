@@ -12,6 +12,7 @@ COPY . ./
 
 ARG PORT=3000
 ENV NODE_ENV=production
+ENV PORT=${PORT}
 
 EXPOSE ${PORT}
 

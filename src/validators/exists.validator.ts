@@ -9,10 +9,10 @@ import type { EntitySchema, FindOptionsWhere, ObjectType } from 'typeorm';
 import type { DataSource } from 'typeorm';
 
 /**
- * @deprecated Don't use this validator until it's fixed in NestJS
+ * Async validator to check if a value exists in the database
  */
 @ValidatorConstraint({ name: 'exists', async: true })
-export class ExistsValidator implements ValidatorConstraintInterface {
+export class DatabaseExistsValidator implements ValidatorConstraintInterface {
   constructor(@InjectDataSource() private readonly dataSource: DataSource) {}
 
   public async validate<E>(
@@ -56,7 +56,7 @@ export function Exists<E>(
       propertyName: propertyName as string,
       options: validationOptions,
       constraints,
-      validator: ExistsValidator,
+      validator: DatabaseExistsValidator,
     });
   };
 }

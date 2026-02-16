@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddChatMessageClientMessageId1771078098679
-  implements MigrationInterface
-{
+export class AddChatMessageClientMessageId1771078098679 implements MigrationInterface {
   name = 'addChatMessageClientMessageId1771078098679';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
