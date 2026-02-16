@@ -26,7 +26,7 @@ import {
   UUIDParam,
 } from '../../decorators/http.decorators.ts';
 import { ApiFile } from '../../decorators/swagger.schema.ts';
-import type { IFile } from '../../interfaces/IFile.ts';
+import type { IFile } from '../../interfaces/i-file.ts';
 import { SupabaseGraphqlService } from '../../shared/services/supabase-graphql.service.ts';
 import type { Reference } from '../../types.ts';
 import type { UserEntity } from '../user/user.entity.ts';

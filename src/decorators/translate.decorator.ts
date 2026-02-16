@@ -1,9 +1,9 @@
-import type { ITranslationDecoratorInterface } from '../interfaces/ITranslationDecoratorInterface.ts';
+import type { ITranslationDecoratorInterface } from '../interfaces/i-translation-decorator-interface.ts';
 
 export const STATIC_TRANSLATION_DECORATOR_KEY = 'custom:static-translate';
 export const DYNAMIC_TRANSLATION_DECORATOR_KEY = 'custom:dynamic-translate';
 
-// FIXME: This is a temporary solution to get the translation decorator working.
+// Note: This is a temporary solution to get the translation decorator working and may be refined later.
 export function StaticTranslate(
   data: ITranslationDecoratorInterface = {},
 ): PropertyDecorator {

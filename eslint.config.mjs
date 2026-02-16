@@ -3,12 +3,12 @@
 import eslint from '@eslint/js';
 import stylisticPlugin from '@stylistic/eslint-plugin';
 import canonicalPlugin from 'eslint-plugin-canonical';
+import importPlugin from 'eslint-plugin-import';
 import nPlugin from 'eslint-plugin-n';
 import prettierPlugin from 'eslint-plugin-prettier/recommended';
-import sonarjsPlugin from 'eslint-plugin-sonarjs';
 import promisePlugin from 'eslint-plugin-promise';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
-import importPlugin from 'eslint-plugin-import';
+import sonarjsPlugin from 'eslint-plugin-sonarjs';
 import unicornPlugin from 'eslint-plugin-unicorn';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
@@ -52,9 +52,7 @@ export default tseslint.config(
     },
   },
   {
-    extends: [
-      importPlugin.flatConfigs.typescript,
-    ],
+    extends: [importPlugin.flatConfigs.typescript],
     rules: {
       'eslintComments/no-use': 'off',
       // 'import/extensions': ['error', 'always', {ignorePackages: true}],
@@ -74,9 +72,7 @@ export default tseslint.config(
         ...globals.node,
       },
     },
-    extends: [
-      unicornPlugin.configs['flat/all'],
-    ],
+    extends: [unicornPlugin.configs['flat/all']],
     rules: {
       'unicorn/prevent-abbreviations': 'off',
       'unicorn/no-abusive-eslint-disable': 'off',
@@ -93,9 +89,7 @@ export default tseslint.config(
         ...globals.node,
       },
     },
-    extends: [
-      canonicalPlugin.configs['flat/recommended'],
-    ],
+    extends: [canonicalPlugin.configs['flat/recommended']],
     rules: {
       'canonical/filename-match-exported': 'error',
       'canonical/import-specifier-newline': 'off',
@@ -112,9 +106,7 @@ export default tseslint.config(
         ...globals.node,
       },
     },
-    extends: [
-      sonarjsPlugin.configs.recommended,
-    ],
+    extends: [sonarjsPlugin.configs.recommended],
     rules: {
       'sonarjs/no-duplicate-string': 'off',
     },
@@ -126,9 +118,7 @@ export default tseslint.config(
         ...globals.node,
       },
     },
-    extends: [
-      prettierPlugin,
-    ],
+    extends: [prettierPlugin],
     rules: {
       'prettier/prettier': [
         'error',
@@ -148,19 +138,19 @@ export default tseslint.config(
         ...globals.node,
       },
     },
-    extends: [
-      nPlugin.configs['flat/recommended'],
-    ],
+    extends: [nPlugin.configs['flat/recommended']],
     rules: {
       'n/no-extraneous-import': 'off',
       'n/no-missing-import': 'off',
     },
   },
   {
-    extends: [...tseslint.configs.strictTypeChecked,
+    extends: [
+      ...tseslint.configs.strictTypeChecked,
       tseslint.configs.eslintRecommended,
       ...tseslint.configs.stylisticTypeChecked,
-      ...tseslint.configs.recommendedTypeChecked],
+      ...tseslint.configs.recommendedTypeChecked,
+    ],
     rules: {
       'no-redeclare': 'off',
       '@typescript-eslint/no-redeclare': 'error',
@@ -325,7 +315,7 @@ export default tseslint.config(
           paths: [
             {
               name: 'rxjs/Rx',
-              message: 'Please import directly from \'rxjs\' instead',
+              message: "Please import directly from 'rxjs' instead",
             },
           ],
         },
@@ -441,8 +431,9 @@ export default tseslint.config(
       },
       parserOptions: {
         projectService: {
-          extraFileExtensions: ['.ts'],
           defaultProject: 'tsconfig.eslint.json',
+          // Allow standalone config files like Vite's to use the default project
+          allowDefaultProject: ['vite.config.mts', 'app.e2e-spec.ts', 'taze.config.js'],
         },
         // @ts-ignore
         tsconfigRootDir: import.meta.dirname,

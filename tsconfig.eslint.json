@@ -10,6 +10,11 @@
   "exclude": [
     ".vuepress/**/*",
     "node_modules/**/*",
-    "dist/**/*",
+    "dist",
+    "**/*.*spec.ts",
+    ".agents",
+    ".cline",
+    ".cursor",
+    ".vuepress"
   ]
 }

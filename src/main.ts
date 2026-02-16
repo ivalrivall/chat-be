@@ -105,7 +105,8 @@ export async function bootstrap(): Promise<NestExpressApplication> {
 
   const port = configService.appConfig.port;
 
-  await app.listen(port, '127.0.0.1');
+  // Listen on all interfaces so the app is accessible from outside the container
+  await app.listen(port, '0.0.0.0');
   console.info(`server running on ${await app.getUrl()}`);
 
   return app;

@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 /**
  * generate hash from password or string
@@ -26,9 +26,7 @@ export function validateHash(
   return bcrypt.compare(password, hash);
 }
 
-export function getVariableName<TResult>(
-  getVar: () => TResult,
-): string | undefined {
+export function getVariableName(getVar: () => unknown): string | undefined {
   const m = /\(\)=>(.*)/.exec(
     getVar.toString().replaceAll(/(\r\n|\n|\r|\s)/gm, ''),
   );

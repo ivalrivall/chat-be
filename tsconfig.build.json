@@ -1,9 +1,12 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": [
-    "node_modules",
-    "test",
-    "**/*spec.ts",
-    "src/modules/post/**/*"
-  ]
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "./dist",
+    "declaration": true,
+    "sourceMap": true,
+    "declarationMap": false,
+    "allowImportingTsExtensions": false
+  },
+  "exclude": ["node_modules", "test", "**/*spec.ts", "src/modules/post/**/*"]
 }

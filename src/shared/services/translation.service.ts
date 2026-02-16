@@ -5,7 +5,7 @@ import { I18nService } from 'nestjs-i18n';
 
 import { AbstractDto } from '../../common/dto/abstract.dto.ts';
 import { STATIC_TRANSLATION_DECORATOR_KEY } from '../../decorators/translate.decorator.ts';
-import type { ITranslationDecoratorInterface } from '../../interfaces/ITranslationDecoratorInterface.ts';
+import type { ITranslationDecoratorInterface } from '../../interfaces/i-translation-decorator-interface.ts';
 import { ContextProvider } from '../../providers/context.provider.ts';
 
 @Injectable()
@@ -20,42 +20,40 @@ export class TranslationService {
   }
 
   async translateNecessaryKeys<T extends AbstractDto>(dto: T): Promise<T> {
-    await Promise.all(
-      _.map(dto, (value, key) => {
-        if (_.isString(value)) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          const translateDec: ITranslationDecoratorInterface | undefined =
-            Reflect.getMetadata(STATIC_TRANSLATION_DECORATOR_KEY, dto, key);
+    const tasks = this.collectTranslationTasks(dto);
 
-          if (translateDec) {
-            return this.translate(
-              `${translateDec.translationKey ?? key}.${value}`,
-            );
-          }
-
-          return;
-        }
-
-        if (value instanceof AbstractDto) {
-          return this.translateNecessaryKeys(value);
-        }
-
-        if (Array.isArray(value)) {
-          return Promise.all(
-            _.map(value, (v) => {
-              if (v instanceof AbstractDto) {
-                return this.translateNecessaryKeys(v);
-              }
-
-              return null;
-            }),
-          );
-        }
-
-        return null;
-      }),
-    );
+    if (tasks.length > 0) {
+      await Promise.all(tasks);
+    }
 
     return dto;
+  }
+
+  private collectTranslationTasks(dto: AbstractDto): Array<Promise<unknown>> {
+    const tasks: Array<Promise<unknown>> = [];
+    const entries = Object.entries(dto as unknown as Record<string, unknown>);
+
+    for (const [key, value] of entries) {
+      if (_.isString(value)) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const translateDec: ITranslationDecoratorInterface | undefined =
+          Reflect.getMetadata(STATIC_TRANSLATION_DECORATOR_KEY, dto, key);
+
+        if (translateDec) {
+          const translationKey = `${translateDec.translationKey ?? key}.${value}`;
+          tasks.push(this.translate(translationKey));
+        }
+      } else if (value instanceof AbstractDto) {
+        tasks.push(...this.collectTranslationTasks(value));
+      } else if (Array.isArray(value)) {
+        for (const v of value) {
+          if (v instanceof AbstractDto) {
+            tasks.push(...this.collectTranslationTasks(v));
+          }
+        }
+      }
+    }
+
+    return tasks;
   }
 }

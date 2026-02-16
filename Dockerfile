@@ -1,30 +1,19 @@
-FROM node:22-slim AS build
+FROM oven/bun:latest AS base
 WORKDIR /usr/src/app
 
-# Copy only manifest files (do not copy .yarnrc.yml so container uses built-in Yarn)
+# Copy manifest files so Bun can install dependencies (respects yarn.lock via --yarn)
 COPY package.json yarn.lock ./
 
-# Install dependencies with Yarn
-RUN yarn install --ignore-engines
+# Install dependencies with Bun using your existing yarn.lock
+RUN bun install --yarn
 
 # Copy application source
 COPY . ./
 
-# Build the NestJS app
-RUN yarn build:prod
-
-FROM node:22-slim
-WORKDIR /usr/src/app
-
 ARG PORT=3000
 ENV NODE_ENV=production
 
-# Copy built artifacts and node_modules from build stage
-COPY --from=build /usr/src/app/dist ./dist
-COPY --from=build /usr/src/app/node_modules ./node_modules
-COPY package.json ./
+EXPOSE ${PORT}
 
-EXPOSE $PORT
-
-# Start the app using Yarn script
-CMD [ "yarn", "start:prod" ]
+# Run NestJS directly with Bun's TypeScript support (no separate tsc build step)
+CMD [ "bun", "src/main.ts" ]

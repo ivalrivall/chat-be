@@ -1,8 +1,22 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.1.4/schema.json",
   "vcs": { "enabled": false, "clientKind": "git", "useIgnoreFile": false },
-  "files": { "ignoreUnknown": false, "includes": ["**", "!**/.vscode/**/*"] },
-  "formatter": { "enabled": true, "indentStyle": "tab" },
+  "files": {
+    "ignoreUnknown": false,
+    "includes": [
+      "**",
+      "!**/.vscode/**/*",
+      "!node_modules/**",
+      "!dist/**",
+      "!.vuepress/**",
+      "!**/*.*spec.ts",
+      "!**/*.spec.ts",
+      "!.agents/**",
+      "!.cline/**",
+      "!.cursor/**"
+    ]
+  },
+  "formatter": { "enabled": true, "indentStyle": "space" },
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
@@ -177,7 +191,7 @@
     }
   },
   "javascript": {
-    "formatter": { "quoteStyle": "double" },
+    "formatter": { "quoteStyle": "single" },
     "globals": ["exports"],
     "parser": {
       "unsafeParameterDecoratorsEnabled": true

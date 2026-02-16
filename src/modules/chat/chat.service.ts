@@ -4,7 +4,7 @@ import type { Repository } from 'typeorm';
 import { v4 as uuidV4 } from 'uuid';
 
 import { PageDto } from '../../common/dto/page.dto.ts';
-import type { IFile } from '../../interfaces/IFile.ts';
+import type { IFile } from '../../interfaces/i-file.ts';
 import { AwsS3Service } from '../../shared/services/aws-s3.service.ts';
 import { RabbitMqService } from '../../shared/services/rabbitmq.service.ts';
 import { RedisService } from '../../shared/services/redis.service.ts';
